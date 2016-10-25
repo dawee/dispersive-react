@@ -1,7 +1,23 @@
 const {assert} = require('chai');
 const sinon = require('sinon');
-const Dispersive = require('dispersive');
-const {Component, UniqueStateField, ListStateField, CountStateField} = require('..');
+const mock = require('mock-require');
+
+let Dispersive = null;
+let DispersiveReact = null
+
+if (process.env.DISPERSIVE_ECMA === '5') {
+  const DispersiveES6 = require('dispersive/es5');
+
+  Dispersive = require('dispersive/es5');
+
+  mock('dispersive', Dispersive);
+  DispersiveReact = require('../es5');
+} else {
+  Dispersive = require('dispersive');
+  DispersiveReact = require('..');
+}
+
+const {Component, UniqueStateField, ListStateField, CountStateField} = DispersiveReact;
 
 class MockComponent {
 
@@ -41,9 +57,11 @@ describe('Component', () => {
       todos: new ListStateField(Todo.objects)
     };
 
-    class TodoList extends Component.mixin(MockComponent, {state}) {
+    class TodoList extends Component.mixin(MockComponent) {
       // TodoList is empty
     }
+
+    Component.attach(TodoList, {state});
 
     // -- tests
 
@@ -78,10 +96,11 @@ describe('Component', () => {
       todo: new UniqueStateField(Todo.objects)
     };
 
-    class TodoLine extends Component.mixin(MockComponent, {state}) {
+    class TodoLine extends Component.mixin(MockComponent) {
       // TodoLine is empty
     }
 
+    Component.attach(TodoLine, {state});
 
     // -- tests
 
@@ -116,9 +135,11 @@ describe('Component', () => {
       )
     };
 
-    class TodoStatus extends Component.mixin(MockComponent, {state}) {
+    class TodoStatus extends Component.mixin(MockComponent) {
       // TodoLine is empty
     }
+
+    Component.attach(TodoStatus, {state});
 
     // -- tests
 
