@@ -18,7 +18,7 @@
   "homepage": "https://github.com/dawee/dispersive-react#readme",
   "peerDependencies": {
     "react": "*",
-    "dispersive": "*"
+    "dispersive": "^0.10.3"
   },
   "devDependencies": {
     "babel-core": "6.10.4",
