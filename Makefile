@@ -9,7 +9,7 @@ clean:
 lint:
 	@eslint src
 
-test:
+test: lib
 	@mocha --compilers js:babel-register --require babel-polyfill
 
 lib:
