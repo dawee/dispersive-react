@@ -1,21 +1,18 @@
 
-validate: test es5-test
+validate: test
 
-re: clean es5
+re: clean lib
 
 clean:
-	@rm -rf es5
+	@rm -rf lib
 
 lint:
-	@eslint lib
+	@eslint src
 
 test:
-	@mocha
+	@mocha --compilers js:babel-register --require babel-polyfill
 
-es5-test: re
-	@DISPERSIVE_ECMA=5 mocha --compilers js:babel-register --require babel-polyfill
-
-es5:
-	@babel lib --out-dir es5
+lib:
+	@babel src --out-dir lib
 
 .PHONY: test

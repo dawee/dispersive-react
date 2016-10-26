@@ -1,21 +1,8 @@
 const {assert} = require('chai');
 const sinon = require('sinon');
 const mock = require('mock-require');
-
-let Dispersive = null;
-let DispersiveReact = null
-
-if (process.env.DISPERSIVE_ECMA === '5') {
-  const DispersiveES6 = require('dispersive/es5');
-
-  Dispersive = require('dispersive/es5');
-
-  mock('dispersive', Dispersive);
-  DispersiveReact = require('../es5');
-} else {
-  Dispersive = require('dispersive');
-  DispersiveReact = require('..');
-}
+const Dispersive = require('dispersive');
+const DispersiveReact = require('..');
 
 const {Component, UniqueStateField, ListStateField, CountStateField} = DispersiveReact;
 
