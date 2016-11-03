@@ -176,10 +176,10 @@ describe('Component', () => {
 
   describe('AtLeastOnceTodo (CustomField)', () => {
 
-    class AtLeastOnceTodo extends DispersiveReact.QuerySetStateField {
+    const atLeastOne = queryset => class extends DispersiveReact.QuerySetStateField {
 
       get queryset() {
-        return Todo.objects;
+        return queryset;
       }
 
       initialize() {
@@ -191,13 +191,13 @@ describe('Component', () => {
         if (!this.value) this.updateValue(true);
       }
 
-    }
+    };
 
     beforeEach(() => {
       Todo.objects.delete();
 
       Component.stateFields = {
-        booted: AtLeastOnceTodo,
+        booted: atLeastOne(Todo.objects),
       };
     });
 
