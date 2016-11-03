@@ -22,7 +22,7 @@ describe('Component', () => {
 
   afterEach(() => component && component.componentWillUnmount())
 
-  describe('state', () => {
+  describe('QuerySetStateField', () => {
 
     describe('todos: Todo.objects', () => {
       beforeEach(() => {
@@ -173,5 +173,45 @@ describe('Component', () => {
     });
 
   });
+
+  describe('AtLeastOnceTodo (CustomField)', () => {
+
+    class AtLeastOnceTodo extends DispersiveReact.QuerySetStateField {
+
+      get queryset() {
+        return Todo.objects;
+      }
+
+      initialize() {
+        super.initialize();
+        this.initValue(false);
+      }
+
+      update() {
+        if (!this.value) this.updateValue(true);
+      }
+
+    }
+
+    beforeEach(() => {
+      Todo.objects.delete();
+
+      Component.stateFields = {
+        booted: AtLeastOnceTodo,
+      };
+    });
+
+    it('should initialize booted to false', () => {
+      component = new Component();
+      assert.equal(component.state.booted, false);
+    });
+
+    it('should update booted to true', () => {
+      component = new Component();
+      Todo.objects.create();
+      assert.equal(component.state.booted, true);
+    });
+
+  })
 
 });

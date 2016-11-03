@@ -7,9 +7,32 @@ QuerySet.recompute = true;
 
 class StateField {
 
-  constructor({component, name = null}) {
+  static create({component, name, spec}) {
+    if (!!spec.prototype && spec.prototype instanceof StateField) {
+      const CustomStateField = spec;
+
+      return new CustomStateField({component, name});
+    }
+
+    return new QuerySetStateField({component, name, queryset: spec});
+  }
+
+  constructor({component = null, name = null}) {
     this.name = name;
     this.component = component;
+  }
+
+  initValue(value) {
+    this.component.state[this.name] = value;
+    this.value = value;
+  }
+
+  updateValue(value) {
+    const updater = {};
+
+    updater[this.name] = value;
+    this.component.setState(updater);
+    this.value = value;
   }
 
   compute() {
@@ -17,14 +40,11 @@ class StateField {
   }
 
   initialize() {
-    this.component.state[this.name] = this.compute();
+    this.initValue(this.compute());
   }
 
   update() {
-    const updater = {};
-
-    updater[this.name] = this.compute();
-    this.component.setState(updater);
+    this.updateValue(this.compute());
   }
 
   activate() {}
@@ -34,15 +54,24 @@ class StateField {
 
 class QuerySetStateField extends StateField {
 
-  constructor({component, name, spec}) {
+  constructor({component, name, queryset}) {
     super({component, name});
-    this.resolver = typeof spec === 'function' ? spec : () => spec;
+
+    if (!this.queryset) this.queryset = queryset;
+
+    this.explode();
   }
 
   explode() {
-    let initial = this.resolver(this.component.props, this.component.context);
+    let initial = null;
     let qpack = null;
     let model = null;
+
+    if (typeof this.queryset === 'function') {
+      initial = this.queryset(this.component.props, this.component.context);
+    } else {
+      initial = this.queryset;
+    }
 
     if (initial instanceof QuerySet) initial = initial.values();
 
@@ -57,7 +86,6 @@ class QuerySetStateField extends StateField {
   }
 
   initialize() {
-    this.explode();
     this.component.state[this.name] = this.initial;
   }
 
@@ -103,7 +131,7 @@ class Component extends React.Component {
 
     for (const name of Object.keys(specs)) {
       const spec = specs[name];
-      const field = new QuerySetStateField({name, spec, component: this});
+      const field = StateField.create({name, spec, component: this});
 
       field.initialize();
       field.activate();
@@ -114,4 +142,4 @@ class Component extends React.Component {
 
 }
 
-module.exports = {Component, StateField};
+module.exports = {Component, StateField, QuerySetStateField};
