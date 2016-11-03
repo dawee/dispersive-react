@@ -65,7 +65,16 @@ class QuerySetStateField extends StateField {
     return this.qpack.recompute();
   }
 
+  deactivate() {
+    this.activated = false;
+  }
+
+  update() {
+    if (this.activated) super.update();
+  }
+
   activate() {
+    this.activated = true;
     this.qpack.queryset.changed(() => this.update());
 
     if (!!this.model) this.model.changed(() => this.update());

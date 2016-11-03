@@ -20,20 +20,18 @@ describe('Component', () => {
 
   }
 
+  afterEach(() => component && component.componentWillUnmount())
+
   describe('state', () => {
 
-    afterEach(() => component && component.componentWillUnmount())
-
     describe('todos: Todo.objects', () => {
-      before(() => {
-        Component.stateFields = {
-          todos: Todo.objects
-        };
-      });
-
       beforeEach(() => {
         Todo.objects.delete();
         Todo.objects.create();
+
+        Component.stateFields = {
+          todos: Todo.objects
+        };
       });
 
       it('should initialize state.todos', () => {
@@ -53,7 +51,8 @@ describe('Component', () => {
 
       let unique = null;
 
-      before(() => {
+      beforeEach(() => {
+        Todo.objects.delete();
         unique = Todo.objects.create();
 
         Component.stateFields = {
@@ -71,6 +70,30 @@ describe('Component', () => {
 
         unique.update({text: 'wash dishes'});
         assert.equal(component.state.todo.text, 'wash dishes');
+      });
+
+    });
+
+    describe('todo: Todo.objects.first()', () => {
+
+      beforeEach(() => {
+        Todo.objects.delete();
+        Todo.objects.create({text: 'wash dishes'});
+
+        Component.stateFields = {
+          todo: Todo.objects.orderBy('text').first(),
+        };
+      });
+
+      it('should initialize state.todo', () => {
+        component = new Component();
+        assert.equal(component.state.todo.text, 'wash dishes');
+      });
+
+      it('should update state.todo', () => {
+        component = new Component();
+        Todo.objects.create({text: 'star dispersive'});
+        assert.equal(component.state.todo.text, 'star dispersive');
       });
 
     });
