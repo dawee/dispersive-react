@@ -122,6 +122,31 @@ describe('Component', () => {
 
     });
 
+    describe('todo: Todo.objects.all()', () => {
+
+      beforeEach(() => {
+        Todo.objects.delete();
+        Todo.objects.create();
+
+        Component.stateFields = {
+          todos: Todo.objects.all()
+        };
+      });
+
+      it('should initialize state.todos', () => {
+        component = new Component();
+        assert.equal(component.state.todos.length, 1);
+      });
+
+      it('should update state.todos', () => {
+        component = new Component();
+
+        Todo.objects.create();
+        assert.equal(component.state.todos.length, 2);
+      });
+
+    });
+
   });
 
 });
