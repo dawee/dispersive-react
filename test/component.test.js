@@ -7,6 +7,8 @@ const DispersiveReact = require('../src');
 
 describe('Component', () => {
 
+  let component = null;
+
   const schema = {text: '', checked: false};
   const Todo = Dispersive.store.register('todos', {schema});
 
@@ -18,28 +20,61 @@ describe('Component', () => {
 
   }
 
-  Component.stateFields = {
-    todos: Todo.objects
-  };
+  describe('state', () => {
 
-  beforeEach(() => Todo.objects.delete());
+    afterEach(() => component && component.componentWillUnmount())
 
-  it('should initialize state.todos', () => {
-    Todo.objects.create();
+    describe('todos: Todo.objects', () => {
+      before(() => {
+        Component.stateFields = {
+          todos: Todo.objects
+        };
+      });
 
-    const component = new Component();
+      beforeEach(() => {
+        Todo.objects.delete();
+        Todo.objects.create();
+      });
 
-    assert.equal(component.state.todos.length, 1);
-  });
+      it('should initialize state.todos', () => {
+        component = new Component();
+        assert.equal(component.state.todos.length, 1);
+      });
 
-  it('should update state.todos', () => {
-    Todo.objects.create();
+      it('should update state.todos', () => {
+        component = new Component();
 
-    const component = new Component();
+        Todo.objects.create();
+        assert.equal(component.state.todos.length, 2);
+      });
+    });
 
-    Todo.objects.create();
+    describe('todo: Todo.objects.get({id: ...})', () => {
 
-    assert.equal(component.state.todos.length, 2);
+      let unique = null;
+
+      before(() => {
+        unique = Todo.objects.create();
+
+        Component.stateFields = {
+          todo: Todo.objects.get({id: unique.id}),
+        };
+      });
+
+      it('should initialize state.todo', () => {
+        component = new Component();
+        assert.equal(component.state.todo.id, unique.id);
+      });
+
+      it('should update state.todo', () => {
+        component = new Component();
+
+        unique.update({text: 'wash dishes'});
+        assert.equal(component.state.todo.text, 'wash dishes');
+      });
+
+    });
+
   });
 
 });
