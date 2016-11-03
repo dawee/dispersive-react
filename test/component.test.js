@@ -2,159 +2,44 @@ const {assert} = require('chai');
 const sinon = require('sinon');
 const mock = require('mock-require');
 const Dispersive = require('dispersive');
-const DispersiveReact = require('..');
+const DispersiveReact = require('../src');
 
-const {Component, UniqueStateField, ListStateField, CountStateField} = DispersiveReact;
-
-class MockComponent {
-
-  constructor(props = {}) {
-    this.props = props;
-  }
-
-  setState(newState) {
-    Object.assign(this.state, newState);
-  }
-
-}
-
-const schema = {
-  text: null,
-  checked: false
-};
-
-class Todo extends Dispersive.Model {
-  // Todo model is empty
-}
-
-const store = new Dispersive.Store();
-
-store.register('todos', {model: Todo, schema});
 
 describe('Component', () => {
 
+  const schema = {text: '', checked: false};
+  const Todo = Dispersive.store.register('todos', {schema});
 
-  describe('ListStateField', () => {
+  class Component extends DispersiveReact.Component {
 
-    /*
-     * TodoList
-     */
-
-    const state = {
-      todos: new ListStateField(Todo.objects)
-    };
-
-    class TodoList extends Component.mixin(MockComponent) {
-      // TodoList is empty
+    setState(newState) {
+      Object.assign(this.state, newState);
     }
 
-    Component.attach(TodoList, {state});
+  }
 
-    // -- tests
+  Component.stateFields = {
+    todos: Todo.objects
+  };
 
-    beforeEach(() => Todo.objects.delete());
+  beforeEach(() => Todo.objects.delete());
 
-    it('should init with existing list elements', () => {
-      Todo.objects.create({text: 'foo'});
+  it('should initialize state.todos', () => {
+    Todo.objects.create();
 
-      const todoList = new TodoList();
+    const component = new Component();
 
-      assert.equal(todoList.state.todos[0].text, 'foo');
-    });
-
-    it('should update with new elements', () => {
-      const todoList = new TodoList();
-
-      Todo.objects.create({text: 'foo'});
-
-      assert.equal(todoList.state.todos[0].text, 'foo');
-    });
-
+    assert.equal(component.state.todos.length, 1);
   });
 
+  it('should update state.todos', () => {
+    Todo.objects.create();
 
-  describe('UniqueStateField', () => {
+    const component = new Component();
 
-    /*
-     * TodoLine
-     */
+    Todo.objects.create();
 
-    const state = {
-      todo: new UniqueStateField(Todo.objects)
-    };
-
-    class TodoLine extends Component.mixin(MockComponent) {
-      // TodoLine is empty
-    }
-
-    Component.attach(TodoLine, {state});
-
-    // -- tests
-
-    Todo.objects.create({text: 'foo'});
-
-
-    it('should init with existing element', () => {
-      const todoLine = new TodoLine();
-
-      assert.equal(todoLine.state.todo.text, 'foo');
-    });
-
-    it('should update when element changes', () => {
-      const todoLine = new TodoLine();
-
-      Todo.objects.get().update({checked: true});
-
-      assert.equal(todoLine.state.todo.checked, true);
-    });
-
+    assert.equal(component.state.todos.length, 2);
   });
 
-  describe('CountStateField', () => {
-
-    /*
-     * TodoLine
-     */
-
-    const state = {
-      todosCount: new CountStateField(
-        props => props.uncheckedOnly ? Todo.objects.filter({checked: false}) : Todo.objects
-      )
-    };
-
-    class TodoStatus extends Component.mixin(MockComponent) {
-      // TodoLine is empty
-    }
-
-    Component.attach(TodoStatus, {state});
-
-    // -- tests
-
-    beforeEach(() => Todo.objects.delete());
-
-    it('should init with existing element', () => {
-      Todo.objects.create({text: 'foo'});
-
-      const todoStatus = new TodoStatus();
-
-      assert.equal(todoStatus.state.todosCount, 1);
-    });
-
-    it('should update when element changes', () => {
-      const todoStatus = new TodoStatus();
-
-      Todo.objects.create({text: 'foo'});
-
-      assert.equal(todoStatus.state.todosCount, 1);
-    });
-
-    it('should update when element changes', () => {
-      const todoStatus = new TodoStatus({uncheckedOnly: true});
-
-      Todo.objects.create({text: 'foo', checked: true});
-
-      assert.equal(todoStatus.state.todosCount, 0);
-    });
-
-  });
 });

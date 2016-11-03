@@ -1,93 +1,109 @@
 const React = require('react');
+const {QuerySet, Model} = require('dispersive');
 
 
-class StateFieldApplier {
+QuerySet.recompute = true;
 
-  constructor(stateField, props) {
-    this.stateField = stateField;
-    this.queryset = this.stateField.resolveQueryset(props);
-    this.emitter = this.stateField.resolveEmitter(this.queryset);
+
+class StateField {
+
+  constructor({component, name = null}) {
+    this.name = name;
+    this.component = component;
   }
 
-  values() {
-    return this.stateField.values(this.queryset);
+  compute() {
+    return null;
   }
 
-  initValues(component, key) {
-    return this.stateField.initValues(component, this.queryset, key);
+  initialize() {
+    this.component.state[this.name] = this.compute();
   }
 
-  updateValues(component, key) {
-    return this.stateField.updateValues(component, this.queryset, key);
+  update() {
+    const updater = {};
+
+    updater[this.name] = this.compute();
+    this.component.setState(updater);
+  }
+
+  activate() {}
+  deactivate() {}
+}
+
+class QuerySetStateField extends StateField {
+
+  constructor({component, name, spec}) {
+    super({component, name});
+    this.resolver = typeof spec === 'function' ? spec : () => spec;
+  }
+
+  explode() {
+    let initial = this.resolver(this.component.props, this.component.context);
+    let qpack = null;
+    let model = null;
+
+    if (initial instanceof QuerySet) initial = initial.values();
+
+    qpack = initial.__qpack__;
+
+    if (initial instanceof Model) {
+      model = initial;
+      initial = initial.values();
+    }
+
+    Object.assign(this, {initial, qpack, model});
+  }
+
+  initialize() {
+    this.explode();
+    this.component.state[this.name] = this.initial;
+  }
+
+  compute() {
+    return this.qpack.recompute();
+  }
+
+  activate() {
+    this.qpack.queryset.changed(() => this.update());
+
+    if (!!this.model) this.model.changed(() => this.update());
   }
 
 }
 
-const componentMixin = Base => class extends Base {
+
+
+class Component extends React.Component {
 
   constructor(...args) {
     super(...args);
-    this.applyStateFields();
-    this.bindEvents();
-    this.listenStores();
-    this.initState();
-  }
 
-  applyStateFields() {
-    const stateFields = this.constructor.stateFields || {};
-
-    this._fields = {};
-
-    for (const key of Object.keys(stateFields)) {
-      this._fields[key] = new StateFieldApplier(stateFields[key], this.props);
-    }
-  }
-
-  bindEvents() {
-    const eventsNames = this.constructor.eventsNames || [];
-
-    for (const eventName of eventsNames) {
-      this[eventName] = this[eventName].bind(this);
-    }
-  }
-
-  listenStores() {
-    for (const key of Object.keys(this._fields)) {
-      this._fields[key].emitter.changed(() => this.updateStateValue(key));
-    }
-  }
-
-  initState() {
     this.state = {};
-
-    Object.keys(this._fields).forEach(key => this.initStateValue(key));
+    this.createFields(this.constructor.stateFields || {});
   }
 
-  initStateValue(key) {
-    this._fields[key].initValues(this, key);
+  createFields(specs) {
+    this._fields = new Set();
+    
+    for (const name of Object.keys(specs)) {
+      const spec = specs[name];
+      const field = new QuerySetStateField({name, spec, component: this});
+
+      field.initialize();
+      field.activate();
+
+      this._fields.add(field)
+    }
   }
 
-  updateStateValue(key) {
-    this._fields[key].updateValues(this, key);
-  }
-
-};
-
-class Component extends componentMixin(React.Component) {
-
-  static attach(component, config = {}) {
-    if (!!config.events) component.eventsNames = config.events;
-    if (!!config.context) component.contextTypes = config.context;
-    if (!!config.props) component.propTypes = config.props;
-    if (!!config.state) component.stateFields = config.state;
-
-    return component;
-  }
-
-  static mixin(Base) {
-    return componentMixin(Base);
+  componentWillUnmount() {
+    for (const field of this._fields) {
+      this._fields.deactivate();
+    }
   }
 
 }
+
 
 module.exports = Component;
