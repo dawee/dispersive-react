@@ -1,5 +1,5 @@
 
-validate: lint test
+validate: re lint test
 
 re: clean lib
 

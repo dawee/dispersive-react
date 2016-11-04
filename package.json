@@ -1,6 +1,6 @@
 {
   "name": "dispersive-react",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React binding for Dispersive",
   "main": "lib",
   "scripts": {
