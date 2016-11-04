@@ -124,16 +124,52 @@ const count = queryset => class extends QuerySetStateField {
 
 class Component extends React.Component {
 
+  static using({events = [], props = {}, context = {}, state = {}}) {
+    return class extends Component {
+      static get eventNames() {
+        return events;
+      }
+
+      static get stateFields() {
+        return state;
+      }
+
+      static get contextTypes() {
+        return context;
+      }
+
+      static get propTypes() {
+        return props;
+      }
+    };
+  }
+
+  static attach(component, {events = [], props = {}, context = {}, state = {}}) {
+    component.eventNames = events;
+    component.stateFields = state;
+    component.contextTypes = context;
+    component.propTypes = props;
+
+    return component;
+  }
+
   constructor(...args) {
     super(...args);
 
     this.state = {};
     this.createFields(this.constructor.stateFields || {});
+    this.bindEvents(this.constructor.eventNames || []);
   }
 
   componentWillUnmount() {
     for (const field of this._fields) {
       field.deactivate();
+    }
+  }
+
+  bindEvents(events) {
+    for (const event of events) {
+      this[event] = !!this[event] && this[event].bind(this) || (() => null);
     }
   }
 

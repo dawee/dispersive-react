@@ -1,4 +1,5 @@
 const {assert} = require('chai');
+const React = require('react');
 const sinon = require('sinon');
 const mock = require('mock-require');
 const Dispersive = require('dispersive');
@@ -234,6 +235,107 @@ describe('Component', () => {
       Todo.objects.create();
       assert.equal(component.state.todosCount, 1);
     });
+  });
+
+  describe('using', () => {
+    const events = ['onCallEvent'];
+    const props = {
+      foo: React.PropTypes.string,
+    };
+
+    const context = {
+      userName: React.PropTypes.string,
+    };
+
+    const state = {
+      todos: Todo.objects
+    };
+
+    class MixinComponent extends DispersiveReact.Component.using({events, props, context, state}) {
+      constructor(...args) {
+        super(...args);
+
+        this.foobar = true;
+      }
+
+      onCallEvent() {
+        assert(this.foobar);
+      }
+    }
+
+    it('should bind events', () => {
+      const ctx = {};
+
+      ctx.onCallEvent = new MixinComponent().onCallEvent;
+      ctx.onCallEvent();
+    });
+
+    it('should add prop types', () => {
+      assert('foo' in MixinComponent.propTypes);
+    });
+
+    it('should add context types', () => {
+      assert('userName' in MixinComponent.contextTypes);
+    });
+
+    it('should add state fields', () => {
+      assert('todos' in MixinComponent.stateFields);
+    });
 
   });
+
+  describe('attach', () => {
+    const events = ['onCallEvent'];
+    const props = {
+      foo: React.PropTypes.string,
+    };
+
+    const context = {
+      userName: React.PropTypes.string,
+    };
+
+    const state = {
+      todos: Todo.objects
+    };
+
+    class MixinComponent extends DispersiveReact.Component {
+      constructor(...args) {
+        super(...args);
+
+        this.foobar = true;
+      }
+
+      onCallEvent() {
+        assert(this.foobar);
+      }
+    }
+
+    const attached = MixinComponent.attach(MixinComponent, {events, props, context, state});
+
+    it('should bind events', () => {
+      const ctx = {};
+
+      ctx.onCallEvent = new MixinComponent().onCallEvent;
+      ctx.onCallEvent();
+    });
+
+    it('should add prop types', () => {
+      assert('foo' in MixinComponent.propTypes);
+    });
+
+    it('should add context types', () => {
+      assert('userName' in MixinComponent.contextTypes);
+    });
+
+    it('should add state fields', () => {
+      assert('todos' in MixinComponent.stateFields);
+    });
+
+    it('should return the component', () => {
+      assert(MixinComponent === attached);
+    });
+
+  });
+
+
 });

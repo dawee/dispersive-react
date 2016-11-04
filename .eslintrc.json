@@ -5,6 +5,7 @@
     "consistent-return": "off",
     "no-param-reassign": "off",
     "no-underscore-dangle": "off",
-    "no-use-before-define": "off"
+    "no-use-before-define": "off",
+    "react/no-multi-comp": "off"
   }
 }
