@@ -212,6 +212,28 @@ describe('Component', () => {
       assert.equal(component.state.booted, true);
     });
 
-  })
+  });
 
+  describe('count(queryset)', () => {
+
+    beforeEach(() => {
+      Todo.objects.delete();
+
+      Component.stateFields = {
+        todosCount: DispersiveReact.count(Todo.objects),
+      };
+    });
+
+    it('should initialize todosCount to 0', () => {
+      component = new Component();
+      assert.equal(component.state.todosCount, 0);
+    });
+
+    it('should update todosCount to 1', () => {
+      component = new Component();
+      Todo.objects.create();
+      assert.equal(component.state.todosCount, 1);
+    });
+
+  });
 });

@@ -57,6 +57,8 @@ class QuerySetStateField extends StateField {
   constructor({component, name, queryset}) {
     super({component, name});
 
+    this.subscriptions = [];
+
     if (!this.queryset) this.queryset = queryset;
 
     this.explode();
@@ -85,30 +87,39 @@ class QuerySetStateField extends StateField {
     Object.assign(this, {initial, qpack, model});
   }
 
-  initialize() {
-    this.component.state[this.name] = this.initial;
-  }
-
   compute() {
     return this.qpack.recompute();
   }
 
   deactivate() {
-    this.activated = false;
-  }
+    for (const subscription of this.subscriptions) {
+      subscription.remove();
+    }
 
-  update() {
-    if (this.activated) super.update();
+    this.subscriptions = [];
   }
 
   activate() {
-    this.activated = true;
-    this.qpack.queryset.changed(() => this.update());
+    this.subscriptions.push(this.qpack.queryset.changed(() => this.update()));
 
-    if (!!this.model) this.model.changed(() => this.update());
+    if (!!this.model) this.subscriptions.push(this.model.changed(() => this.update()));
   }
 
 }
+
+const count = queryset => class extends QuerySetStateField {
+
+  get queryset() {
+    return queryset;
+  }
+
+  compute() {
+    const list = super.compute();
+
+    return Array.isArray(list) ? list.length : 0;
+  }
+
+};
 
 
 class Component extends React.Component {
@@ -142,4 +153,4 @@ class Component extends React.Component {
 
 }
 
-module.exports = {Component, StateField, QuerySetStateField};
+module.exports = {Component, StateField, QuerySetStateField, count};
