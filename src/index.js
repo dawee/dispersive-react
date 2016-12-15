@@ -156,15 +156,37 @@ class Component extends React.Component {
   constructor(...args) {
     super(...args);
 
-    this.state = {};
+    this.state = !!this.state ? this.state : {};
     this.createFields(this.constructor.stateFields || {});
     this.bindEvents(this.constructor.eventNames || []);
+  }
+
+  componentWillMount() {
+    this.createFieldsFromState();
   }
 
   componentWillUnmount() {
     for (const field of this._fields) {
       field.deactivate();
     }
+  }
+
+  createFieldsFromState() {
+    const dispersiveState = {};
+
+    if (!this.state) return;
+
+    for (const key of Object.keys(this.state)) {
+      const spec = this.state[key];
+
+      if (typeof spec === 'function'
+          || (spec instanceof QuerySet)
+          || (!!spec.prototype && spec.prototype instanceof StateField)) {
+        dispersiveState[key] = this.state[key];
+      }
+    }
+
+    this.createFields(dispersiveState);
   }
 
   bindEvents(events) {
@@ -174,7 +196,7 @@ class Component extends React.Component {
   }
 
   createFields(specs) {
-    this._fields = new Set();
+    this._fields = !!this._fields ? this._fields : new Set();
 
     for (const name of Object.keys(specs)) {
       const spec = specs[name];

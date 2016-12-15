@@ -15,6 +15,10 @@ describe('Component', () => {
 
   class Component extends DispersiveReact.Component {
 
+    constructor(props) {
+      super(props);
+    }
+
     setState(newState) {
       Object.assign(this.state, newState);
     }
@@ -232,6 +236,36 @@ describe('Component', () => {
 
     it('should update todosCount to 1', () => {
       component = new Component();
+      Todo.objects.create();
+      assert.equal(component.state.todosCount, 1);
+    });
+  });
+
+  describe('initial state', () => {
+
+    class InitStateComponent extends Component {
+
+      constructor(props) {
+        super(props);
+        this.state = {
+          todosCount: DispersiveReact.count(Todo.objects),
+        };
+      }
+
+    }
+
+    beforeEach(() => {
+      Todo.objects.delete();
+      component = new InitStateComponent();
+      component.componentWillMount();
+    });
+
+
+    it('should be usable for stateFields creation', () => {
+      assert.equal(component.state.todosCount, 0);
+    })
+
+    it('should update todosCount to 1 (from initial state)', () => {
       Todo.objects.create();
       assert.equal(component.state.todosCount, 1);
     });
