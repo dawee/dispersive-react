@@ -181,7 +181,7 @@ class Component extends React.Component {
 
       if (typeof spec === 'function'
           || (spec instanceof QuerySet)
-          || (!!spec.prototype && spec.prototype instanceof StateField)) {
+          || (spec instanceof StateField)) {
         dispersiveState[key] = this.state[key];
       }
     }
