@@ -7,8 +7,6 @@ const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
 );
 
 
-export const Observable = {};
-
 export class Observer extends Component {
 
   /*
@@ -74,14 +72,14 @@ export class Observer extends Component {
 
   getObserved(filter = {}) {
     const observed = {};
-    const push = (name, value) => {
-      if ((name in filter) && filter[name] === Observable) {
+    const push = (prop, name, value) => {
+      if ((name in filter) && filter[name] === this.props[prop][name]) {
         observed[name] = value;
       }
     };
 
-    this.eachQuerySet(({name, value}) => push(name, value));
-    this.eachModel(({name, value}) => push(name, value.objects.get({id: value.id})));
+    this.eachQuerySet(({name, value}) => push('querysets', name, value));
+    this.eachModel(({name, value}) => push('models', name, value.objects.get({id: value.id})));
 
     return observed;
   }

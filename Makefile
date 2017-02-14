@@ -9,10 +9,10 @@ clean:
 lint:
 	@eslint src
 
-test: lib
+test:
 	@NODE_ENV=development mocha --compilers js:babel-register --require babel-polyfill
 
 lib:
-	@babel src --out-dir lib
+	babel src --out-dir lib
 
 .PHONY: test

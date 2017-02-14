@@ -4,7 +4,7 @@ const {expect} = require('chai');
 const sinon = require('sinon');
 const mock = require('mock-require');
 const {Store} = require('dispersive');
-const {Observer, Observable} = require('../src');
+const {Observer} = require('../src');
 const ReactTestRenderer = require('react-test-renderer');
 
 describe('Observer', () => {
@@ -41,7 +41,7 @@ describe('Observer', () => {
       render() {
         return (
           <Observer querysets={{products}}>
-            <ProductsCount products={Observable} />
+            <ProductsCount products={products} />
           </Observer>
         );
       }
@@ -70,7 +70,7 @@ describe('Observer', () => {
       render() {
         return (
           <Observer models={{product: foo}}>
-            <ProductName product={Observable} />
+            <ProductName product={foo} />
           </Observer>
         );
       }
@@ -102,7 +102,7 @@ describe('Observer', () => {
           <Observer models={{product: foo}}>
             <div>
               <div>
-                <ProductName product={Observable} />
+                <ProductName product={foo} />
               </div>
             </div>
           </Observer>

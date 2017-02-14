@@ -15,7 +15,7 @@ npm install dispersive react dispersive-react
 ```jsx
 import {Store} from 'dispersive';
 import React, {Component} from 'react';
-import {Observer, Observable} from 'dispersive-react';
+import {Observer} from 'dispersive-react';
 
 const schema = {
   name: '',
@@ -35,7 +35,7 @@ const ProductList = ({products}) => (
   <ul>
     {products.map(product => (
       <Observer models={{product}}>
-        <Product product={Observable} />
+        <Product product={product} />
       </Observer>
     ))}
   </ul>
@@ -46,7 +46,7 @@ class App extends Component {
   render() {
     return (
       <Observer querysets={{products}}>
-        <ProductList products={Observable} />
+        <ProductList products={products} />
       </Observer>
     )
   }
