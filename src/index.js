@@ -1,6 +1,7 @@
 import {QuerySet, Model} from 'dispersive';
 import React, {Component} from 'react';
 
+
 const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
   el.type.prototype instanceof Component
 );
@@ -89,8 +90,9 @@ export class Observer extends Component {
     const props = el.props;
     let children = el.props.children;
 
-    if (!isComponent(el)) return el;
-    if (!!children) children = React.Children.map(children, child => this.cloneElement(el));
+    if (React.Children.count(children) > 0 && !isComponent(el)) {
+      children = React.Children.map(children, child => this.cloneElement(child));
+    }
 
     return React.cloneElement(el, this.getObserved(el.props), children);
   }

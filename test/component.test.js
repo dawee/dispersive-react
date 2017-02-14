@@ -84,4 +84,38 @@ describe('Observer', () => {
     expect(root.toJSON().children[0]).to.equal('bar');
   });
 
+  it('should work with a sub child component', () => {
+    const products = Store.createObjects({schema: {name: '', price: 0}});
+    const foo = products.create({name: 'foo'});
+
+    class ProductName extends Component {
+
+      render() {
+        return <div>{this.props.product.name}</div>;
+      }
+
+    }
+
+    class Test extends Component {
+      render() {
+        return (
+          <Observer models={{product: foo}}>
+            <div>
+              <div>
+                <ProductName product={Observable} />
+              </div>
+            </div>
+          </Observer>
+        );
+      }
+    }
+
+
+    const root = ReactTestRenderer.create(<Test />);
+
+    expect(root.toJSON().children[0].children[0].children[0]).to.equal('foo');
+    foo.update({name: 'bar'});
+    expect(root.toJSON().children[0].children[0].children[0]).to.equal('bar');
+  });
+
 });
