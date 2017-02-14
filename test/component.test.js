@@ -47,12 +47,41 @@ describe('Observer', () => {
       }
     }
 
-
     const root = ReactTestRenderer.create(<Test />);
 
     expect(root.toJSON().children[0]).to.equal(0);
     products.create({name: 'foo', price: 42});
     expect(root.toJSON().children[0]).to.equal(1);
+  });
+
+  it('should render when a model is changed', () => {
+    const products = Store.createObjects({schema: {name: '', price: 0}});
+    const foo = products.create({name: 'foo'});
+
+    class ProductName extends Component {
+
+      render() {
+        return <div>{this.props.product.name}</div>;
+      }
+
+    }
+
+    class Test extends Component {
+      render() {
+        return (
+          <Observer models={{product: foo}}>
+            <ProductName product={Observable} />
+          </Observer>
+        );
+      }
+    }
+
+
+    const root = ReactTestRenderer.create(<Test />);
+
+    expect(root.toJSON().children[0]).to.equal('foo');
+    foo.update({name: 'bar'});
+    expect(root.toJSON().children[0]).to.equal('bar');
   });
 
 });
