@@ -1,18 +1,47 @@
 import {QuerySet, Model} from 'dispersive';
-import {Component} from 'react';
+import React, {Component} from 'react';
 
+const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
+  el.type.prototype instanceof Component
+);
+
+
+export const Observable = {};
 
 export class Observer extends Component {
+
+  /*
+   * React LifeCycle
+   */
+
+   componentDidMount() {
+     this.subscriptions = {};
+
+     this.eachQuerySet(({name, value}) => this.resetQuerySetSubscription(name, value));
+     this.eachModel(({name, value}) => this.resetModelSubscription(name, value));
+   }
+
+   componentWillUnmount() {
+     this.eachQuerySet(({name}) => this.removeSubscription(name));
+     this.eachModel(({name}) => this.removeSubscription(name));
+   }
+
+
+   componentWillUpdate() {
+     this.eachQuerySet(({name, value}) => this.resetQuerySetSubscription(name, value));
+     this.eachModel(({name, value}) => this.resetModelSubscription(name, value));
+   }
+
 
   /*
    * QuerySet subscriptions
    */
 
-   eachProps(name, predicate) {
-     if (!this.props || !this.props[name]) return;
+   eachProps(prop, predicate) {
+     if (!this.props || !this.props[prop]) return;
 
-     Object.keys(this.props[name]).forEach(
-       name => predicate({name, value: this.props[name][name]})
+     Object.keys(this.props[prop]).forEach(
+       name => predicate({name, value: this.props[prop][name]})
      );
    }
 
@@ -39,34 +68,46 @@ export class Observer extends Component {
   resetModelSubscription(name, model) {
     this.removeSubscription(name);
     this.subscriptions[name] = [model.changed(() => this.forceUpdate())];
-
-    if (!!model.queryset) {
-      this.subscriptions[name].push(model.queryset.changed(() => this.forceUpdate()));
-    }
   }
 
-  /*
-   * React LifeCycle
-   */
 
-   componentDidMount() {
-     this.eachQuerySet(({name, queryset}) => this.resetQuerySetSubscription(name, queryset));
-     this.eachModel(({name, queryset}) => this.resetModelSubscription(name, queryset));
-   }
+  getObserved(filter = {}) {
+    const observed = {};
+    const push = (name, value) => {
+      if ((name in filter) && filter[name] === Observable) {
+        observed[name] = value;
+      }
+    };
 
-   componentWillUnmount() {
-     this.eachQuerySet(({name}) => this.removeSubscription(name));
-     this.eachModel(({name}) => this.removeSubscription(name));
-   }
+    this.eachQuerySet(({name, value}) => push(name, value));
+    this.eachModel(({name, value}) => push(name, value.objects.get({id: value.id})));
 
+    return observed;
+  }
 
-   componentWillUpdate() {
-     this.eachQuerySet(({name, queryset}) => this.resetQuerySetSubscription(name, queryset));
-     this.eachModel(({name, queryset}) => this.resetModelSubscription(name, queryset));
-   }
+  cloneElement(el) {
+    const props = el.props;
+    let children = el.props.children;
+
+    if (!isComponent(el)) return el;
+    if (!!children) children = React.Children.map(children, child => this.cloneElement(el));
+
+    return React.cloneElement(el, this.getObserved(el.props), children);
+  }
+
 
    render() {
-     return this.props.children;
+     const childrenCount = React.Children.count(this.props.children);
+
+     if (childrenCount !== 1) {
+       throw new BadChildrenCount(`Observer accepts only one child. Received : ${childrenCount}`);
+     }
+
+     return this.cloneElement(React.Children.only(this.props.children));
    }
 
+};
+
+Observer.BadChildrenCount = function (message) {
+  Object.assign(this, ({name: 'BadChildrenCount', message}));
 };
