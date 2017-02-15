@@ -81,7 +81,7 @@ export class Watcher extends Component {
 }
 
 Watcher.propTypes = {
-  sources: React.PropTypes.object,
+  sources: React.PropTypes.object.isRequired,
   children: React.PropTypes.element.isRequired,
 };
 

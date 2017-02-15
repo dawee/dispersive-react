@@ -9,23 +9,6 @@ const ReactTestRenderer = require('react-test-renderer');
 
 describe('Watcher', () => {
 
-  it('should render children', () => {
-
-    class Test extends Component {
-      render() {
-        return (
-          <Watcher>
-            <section />
-          </Watcher>
-        );
-      }
-    }
-
-    const root = ReactTestRenderer.create(<Test />);
-
-    expect(root.toJSON().type).to.equal('section');
-  });
-
   it('should render when entry is added', () => {
     const products = Store.createObjects({schema: {name: '', price: 0}});
 
