@@ -9,6 +9,11 @@ const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
 
 export class Watcher extends Component {
 
+  constructor(props) {
+    super(props);
+    this.state = this.getUpdatedStateSources();
+  }
+
   componentDidMount() {
     this.subscriptions = {};
     this.eachSource(({name, source}) => this.resetSubscription(name, source));
@@ -22,22 +27,38 @@ export class Watcher extends Component {
     this.eachSource(({name}) => this.removeSubscription(name));
   }
 
-  getObserved(filter = {}) {
-    const observed = {};
+  getUpdatedStateSources() {
+    const state = {};
 
-    this.eachSource((name, source) => {
-      if (!(name in filter) || filter[name] !== this.props.sources[name]) return;
-
+    this.eachSource(({name, source}) => {
       if (source instanceof Model) {
-        observed[name] = source.objects.get({id: source.id});
+        state[name] = source.objects.get({id: source.id});
       } else if (source instanceof EventEmitter.Emittable) {
-        observed[name] = source;
+        state[name] = source;
       } else {
         throw new Watcher.BadSourceType(name);
       }
     });
 
-    return observed;
+    return state;
+  }
+
+  updateStateSources() {
+    const state = this.getUpdatedStateSources();
+
+    this.setState(state);
+  }
+
+  injectProps(filter = {}) {
+    const props = {};
+
+    this.eachSource(({name}) => {
+      if (!(name in filter) || filter[name] !== this.props.sources[name]) return;
+
+      props[name] = this.state[name];
+    });
+
+    return props;
   }
 
   removeSubscription(name) {
@@ -49,7 +70,7 @@ export class Watcher extends Component {
 
   resetSubscription(name, source) {
     this.removeSubscription(name);
-    this.subscriptions[name] = source.changed(() => this.forceUpdate());
+    this.subscriptions[name] = source.changed(() => this.updateStateSources());
   }
 
   eachSource(predicate) {
@@ -67,7 +88,7 @@ export class Watcher extends Component {
       children = React.Children.map(children, child => this.cloneElement(child));
     }
 
-    return React.cloneElement(el, this.getObserved(el.props), children);
+    return React.cloneElement(el, this.injectProps(el.props), children);
   }
 
   render() {
