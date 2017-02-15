@@ -92,6 +92,8 @@ export class Watcher extends Component {
   }
 
   render() {
+    if (!!this.props.validate && !this.props.validate(this.state)) return null;
+
     const childrenCount = React.Children.count(this.props.children);
 
     if (childrenCount !== 1) throw new Watcher.BadChildrenCount(childrenCount);
@@ -104,6 +106,7 @@ export class Watcher extends Component {
 Watcher.propTypes = {
   sources: React.PropTypes.object.isRequired,
   children: React.PropTypes.element.isRequired,
+  validate: React.PropTypes.func,
 };
 
 Watcher.BadChildrenCount = function WatcherBadChildrenCount(childrenCount) {

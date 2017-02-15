@@ -37,6 +37,60 @@ describe('Watcher', () => {
     expect(root.toJSON().children[0]).to.equal(1);
   });
 
+  it('should render if validator returns true', () => {
+    const products = Store.createObjects({schema: {name: '', price: 0}});
+
+    class ProductsCount extends Component {
+
+      render() {
+        return <div>{this.props.products.count()}</div>;
+      }
+
+    }
+
+    class Test extends Component {
+      render() {
+        return (
+          <Watcher sources={{products}} validate={() => true}>
+            <ProductsCount products={products} />
+          </Watcher>
+        );
+      }
+    }
+
+    const root = ReactTestRenderer.create(<Test />);
+
+    expect(root.toJSON().children[0]).to.equal(0);
+    products.create({name: 'foo', price: 42});
+    expect(root.toJSON().children[0]).to.equal(1);
+  });
+
+  it('should render if validator returns true', () => {
+    const products = Store.createObjects({schema: {name: '', price: 0}});
+
+    class ProductsCount extends Component {
+
+      render() {
+        return <div>{this.props.products.count()}</div>;
+      }
+
+    }
+
+    class Test extends Component {
+      render() {
+        return (
+          <Watcher sources={{products}} validate={() => false}>
+            <ProductsCount products={products} />
+          </Watcher>
+        );
+      }
+    }
+
+    const root = ReactTestRenderer.create(<Test />);
+
+    expect(root.toJSON()).to.equal(null);
+  });
+
   it('should render when a model is changed', () => {
     const products = Store.createObjects({schema: {name: '', price: 0}});
     const foo = products.create({name: 'foo'});
