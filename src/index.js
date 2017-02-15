@@ -6,7 +6,7 @@ const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
 );
 
 
-export class Observer extends Component {
+export class Watcher extends Component {
 
   /*
    * React LifeCycle
@@ -95,16 +95,16 @@ export class Observer extends Component {
   render() {
     const childrenCount = React.Children.count(this.props.children);
 
-    if (childrenCount !== 1) throw new Observer.BadChildrenCount(childrenCount);
+    if (childrenCount !== 1) throw new Watcher.BadChildrenCount(childrenCount);
 
     return this.cloneElement(React.Children.only(this.props.children));
   }
 
 }
 
-Observer.BadChildrenCount = function ObserverBadChildrenCount(childrenCount) {
+Watcher.BadChildrenCount = function WatcherBadChildrenCount(childrenCount) {
   Object.assign(this, ({
     name: 'BadChildrenCount',
-    message: `Observer accepts only one child. Received : ${childrenCount}`,
+    message: `Watcher accepts only one child. Received : ${childrenCount}`,
   }));
 };

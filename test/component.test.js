@@ -4,19 +4,19 @@ const {expect} = require('chai');
 const sinon = require('sinon');
 const mock = require('mock-require');
 const {Store} = require('dispersive');
-const {Observer} = require('../src');
+const {Watcher} = require('../src');
 const ReactTestRenderer = require('react-test-renderer');
 
-describe('Observer', () => {
+describe('Watcher', () => {
 
   it('should render children', () => {
 
     class Test extends Component {
       render() {
         return (
-          <Observer>
+          <Watcher>
             <section />
-          </Observer>
+          </Watcher>
         );
       }
     }
@@ -40,9 +40,9 @@ describe('Observer', () => {
     class Test extends Component {
       render() {
         return (
-          <Observer querysets={{products}}>
+          <Watcher querysets={{products}}>
             <ProductsCount products={products} />
-          </Observer>
+          </Watcher>
         );
       }
     }
@@ -69,9 +69,9 @@ describe('Observer', () => {
     class Test extends Component {
       render() {
         return (
-          <Observer models={{product: foo}}>
+          <Watcher models={{product: foo}}>
             <ProductName product={foo} />
-          </Observer>
+          </Watcher>
         );
       }
     }
@@ -99,13 +99,13 @@ describe('Observer', () => {
     class Test extends Component {
       render() {
         return (
-          <Observer models={{product: foo}}>
+          <Watcher models={{product: foo}}>
             <div>
               <div>
                 <ProductName product={foo} />
               </div>
             </div>
-          </Observer>
+          </Watcher>
         );
       }
     }
