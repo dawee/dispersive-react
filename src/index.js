@@ -9,11 +9,6 @@ const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
 
 export class Watcher extends Component {
 
-  constructor(props) {
-    super(props);
-    this.state = this.getUpdatedStateSources();
-  }
-
   componentDidMount() {
     this.subscriptions = {};
     this.eachSource(({name, source}) => this.resetSubscription(name, source));
@@ -27,35 +22,29 @@ export class Watcher extends Component {
     this.eachSource(({name}) => this.removeSubscription(name));
   }
 
-  getUpdatedStateSources() {
-    const state = {};
+  getNewProps() {
+    const props = {};
 
     this.eachSource(({name, source}) => {
       if (source instanceof Model) {
-        state[name] = source.objects.get({id: source.id});
+        props[name] = source.objects.get({id: source.id});
       } else if (source instanceof EventEmitter.Emittable) {
-        state[name] = source;
+        props[name] = source;
       } else {
         throw new Watcher.BadSourceType(name);
       }
     });
 
-    return state;
+    return props;
   }
 
-  updateStateSources() {
-    const state = this.getUpdatedStateSources();
-
-    this.setState(state);
-  }
-
-  injectProps(filter = {}) {
+  injectProps(filter = {}, newProps = {}) {
     const props = {};
 
     this.eachSource(({name}) => {
       if (!(name in filter) || filter[name] !== this.props.sources[name]) return;
 
-      props[name] = this.state[name];
+      props[name] = newProps[name];
     });
 
     return props;
@@ -70,7 +59,7 @@ export class Watcher extends Component {
 
   resetSubscription(name, source) {
     this.removeSubscription(name);
-    this.subscriptions[name] = source.changed(() => this.updateStateSources());
+    this.subscriptions[name] = source.changed(() => this.forceUpdate());
   }
 
   eachSource(predicate) {
@@ -81,22 +70,23 @@ export class Watcher extends Component {
     );
   }
 
-  cloneElement(el) {
+  cloneElement(el, newProps) {
     let children = el.props.children;
 
     if (React.Children.count(children) > 0 && !isComponent(el)) {
-      children = React.Children.map(children, child => this.cloneElement(child));
+      children = React.Children.map(children, child => this.cloneElement(child, newProps));
     }
 
-    return React.cloneElement(el, this.injectProps(el.props), children);
+    return React.cloneElement(el, this.injectProps(el.props, newProps), children);
   }
 
   render() {
     const childrenCount = React.Children.count(this.props.children);
+    const newProps = this.getNewProps();
 
     if (childrenCount !== 1) throw new Watcher.BadChildrenCount(childrenCount);
 
-    return this.cloneElement(React.Children.only(this.props.children));
+    return this.cloneElement(React.Children.only(this.props.children), newProps);
   }
 
 }
