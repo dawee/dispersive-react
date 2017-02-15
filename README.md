@@ -34,7 +34,7 @@ const Product = ({product}) => (
 const ProductList = ({products}) => (
   <ul>
     {products.map(product => (
-      <Watcher models={{product}}>
+      <Watcher sources={{product}}>
         <Product product={product} />
       </Watcher>
     ))}
@@ -45,7 +45,7 @@ class App extends Component {
 
   render() {
     return (
-      <Watcher querysets={{products}}>
+      <Watcher sources={{products}}>
         <ProductList products={products} />
       </Watcher>
     )

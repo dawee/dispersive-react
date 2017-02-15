@@ -40,7 +40,7 @@ describe('Watcher', () => {
     class Test extends Component {
       render() {
         return (
-          <Watcher querysets={{products}}>
+          <Watcher sources={{products}}>
             <ProductsCount products={products} />
           </Watcher>
         );
@@ -69,7 +69,7 @@ describe('Watcher', () => {
     class Test extends Component {
       render() {
         return (
-          <Watcher models={{product: foo}}>
+          <Watcher sources={{product: foo}}>
             <ProductName product={foo} />
           </Watcher>
         );
@@ -99,7 +99,7 @@ describe('Watcher', () => {
     class Test extends Component {
       render() {
         return (
-          <Watcher models={{product: foo}}>
+          <Watcher sources={{product: foo}}>
             <div>
               <div>
                 <ProductName product={foo} />

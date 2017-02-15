@@ -1,3 +1,4 @@
+import {EventEmitter, Model} from 'dispersive';
 import React, {Component} from 'react';
 
 
@@ -8,77 +9,55 @@ const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
 
 export class Watcher extends Component {
 
-  /*
-   * React LifeCycle
-   */
-
   componentDidMount() {
     this.subscriptions = {};
-
-    this.eachQuerySet(({name, value}) => this.resetQuerySetSubscription(name, value));
-    this.eachModel(({name, value}) => this.resetModelSubscription(name, value));
+    this.eachSource(({name, source}) => this.resetSubscription(name, source));
   }
 
   componentWillUpdate() {
-    this.eachQuerySet(({name, value}) => this.resetQuerySetSubscription(name, value));
-    this.eachModel(({name, value}) => this.resetModelSubscription(name, value));
+    this.eachSource(({name, source}) => this.resetSubscription(name, source));
   }
 
   componentWillUnmount() {
-    this.eachQuerySet(({name}) => this.removeSubscription(name));
-    this.eachModel(({name}) => this.removeSubscription(name));
+    this.eachSource(({name}) => this.removeSubscription(name));
   }
-
-
-  /*
-   * QuerySet subscriptions
-   */
 
   getObserved(filter = {}) {
     const observed = {};
-    const push = (prop, name, value) => {
-      if ((name in filter) && filter[name] === this.props[prop][name]) {
-        observed[name] = value;
-      }
-    };
 
-    this.eachQuerySet(({name, value}) => push('querysets', name, value));
-    this.eachModel(({name, value}) => push('models', name, value.objects.get({id: value.id})));
+    this.eachSource((name, source) => {
+      if (!(name in filter) || filter[name] !== this.props.sources[name]) return;
+
+      if (source instanceof Model) {
+        observed[name] = source.objects.get({id: source.id});
+      } else if (source instanceof EventEmitter.Emittable) {
+        observed[name] = source;
+      } else {
+        throw new Watcher.BadSourceType(name);
+      }
+    });
 
     return observed;
   }
 
   removeSubscription(name) {
-    if (! (name in this.subscriptions)) return;
+    if (!this.subscriptions[name]) return;
 
-    this.subscriptions[name].forEach(subscription => subscription.remove());
-    delete this.subscriptions[name];
+    this.subscriptions[name].remove();
+    this.subscriptions[name] = null;
   }
 
-  resetQuerySetSubscription(name, queryset) {
+  resetSubscription(name, source) {
     this.removeSubscription(name);
-    this.subscriptions[name] = [queryset.changed(() => this.forceUpdate())];
+    this.subscriptions[name] = source.changed(() => this.forceUpdate());
   }
 
-  resetModelSubscription(name, model) {
-    this.removeSubscription(name);
-    this.subscriptions[name] = [model.changed(() => this.forceUpdate())];
-  }
+  eachSource(predicate) {
+    if (!this.props || !this.props.sources) return;
 
-  eachProps(prop, predicate) {
-    if (!this.props || !this.props[prop]) return;
-
-    Object.keys(this.props[prop]).forEach(
-      name => predicate({name, value: this.props[prop][name]})
+    Object.keys(this.props.sources).forEach(
+      name => predicate({name, source: this.props.sources[name]})
     );
-  }
-
-  eachQuerySet(predicate) {
-    return this.eachProps('querysets', predicate);
-  }
-
-  eachModel(predicate) {
-    return this.eachProps('models', predicate);
   }
 
   cloneElement(el) {
@@ -91,7 +70,6 @@ export class Watcher extends Component {
     return React.cloneElement(el, this.getObserved(el.props), children);
   }
 
-
   render() {
     const childrenCount = React.Children.count(this.props.children);
 
@@ -102,9 +80,21 @@ export class Watcher extends Component {
 
 }
 
+Watcher.propTypes = {
+  sources: React.PropTypes.object,
+  children: React.PropTypes.element.isRequired,
+};
+
 Watcher.BadChildrenCount = function WatcherBadChildrenCount(childrenCount) {
   Object.assign(this, ({
     name: 'BadChildrenCount',
     message: `Watcher accepts only one child. Received : ${childrenCount}`,
+  }));
+};
+
+Watcher.BadSourceType = function WatcherBadSourceType(name) {
+  Object.assign(this, ({
+    name: 'BadSourceType',
+    message: `Watcher source not valid (bad type) : '${name}'`,
   }));
 };
