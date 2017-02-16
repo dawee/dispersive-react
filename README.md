@@ -4,7 +4,7 @@ Binding of [dispersive](http://github.com/dawee/dispersive) for [react](http://g
 
 ## Install
 
-This package has 2 peer dependancies : [dispersive](http://github.com/dawee/dispersive) and [react](http://github.com/facebook/react).
+This package has 2 peer dependencies : [dispersive](http://github.com/dawee/dispersive) and [react](http://github.com/facebook/react).
 
 ```sh
 npm install dispersive react dispersive-react
