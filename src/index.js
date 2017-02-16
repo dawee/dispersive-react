@@ -22,29 +22,31 @@ export class Watcher extends Component {
     this.eachSource(({name}) => this.removeSubscription(name));
   }
 
-  getNewProps() {
-    const props = {};
+  getUpdatedModels() {
+    const updatedModels = {};
 
     this.eachSource(({name, source}) => {
       if (source instanceof Model) {
-        props[name] = source.objects.get({id: source.id});
-      } else if (source instanceof EventEmitter.Emittable) {
-        props[name] = source;
-      } else {
+        updatedModels[name] = source.objects.get({id: source.id});
+      } else if (! (source instanceof EventEmitter.Emittable)) {
         throw new Watcher.BadSourceType(name);
       }
     });
 
-    return props;
+    return updatedModels;
   }
 
-  injectProps(filter = {}, newProps = {}) {
+  injectProps(childProps = {}, updatedModels = {}) {
     const props = {};
 
     this.eachSource(({name}) => {
-      if (!(name in filter) || filter[name] !== this.props.sources[name]) return;
+      const updatedModel = updatedModels[name];
+      const childSource = childProps[name];
 
-      props[name] = newProps[name];
+      if (! (childSource instanceof Model)) return;
+      if (updatedModel.id !== childSource.id) return;
+
+      props[name] = updatedModel;
     });
 
     return props;
@@ -70,23 +72,23 @@ export class Watcher extends Component {
     );
   }
 
-  cloneElement(el, newProps) {
+  cloneElement(el, updatedModels) {
     let children = el.props.children;
 
     if (React.Children.count(children) > 0 && !isComponent(el)) {
-      children = React.Children.map(children, child => this.cloneElement(child, newProps));
+      children = React.Children.map(children, child => this.cloneElement(child, updatedModels));
     }
 
-    return React.cloneElement(el, this.injectProps(el.props, newProps), children);
+    return React.cloneElement(el, this.injectProps(el.props, updatedModels), children);
   }
 
   render() {
     const childrenCount = React.Children.count(this.props.children);
-    const newProps = this.getNewProps();
+    const updatedModels = this.getUpdatedModels();
 
     if (childrenCount !== 1) throw new Watcher.BadChildrenCount(childrenCount);
 
-    return this.cloneElement(React.Children.only(this.props.children), newProps);
+    return this.cloneElement(React.Children.only(this.props.children), updatedModels);
   }
 
 }
