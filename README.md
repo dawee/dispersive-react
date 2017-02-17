@@ -72,4 +72,4 @@ And if you type this :
 products.first().update({price: 15.25});
 ```
 
-Then, the only the concerned _Product_ element will re-render.
+Then, only the concerned _Product_ element will re-render.
