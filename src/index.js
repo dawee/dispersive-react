@@ -1,100 +1,50 @@
-import {EventEmitter, Model} from 'dispersive';
 import React, {Component} from 'react';
-
 
 const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
   el.type.prototype instanceof Component
 );
 
-
 export class Watcher extends Component {
 
   componentDidMount() {
-    this.subscriptions = {};
-    this.eachSource(({name, source}) => this.resetSubscription(name, source));
-  }
-
-  componentWillUpdate() {
-    this.eachSource(({name, source}) => this.resetSubscription(name, source));
+    this.subscriptions = this.props.sources ? this.props.sources.map(
+      source => this.subscribeTo(source)
+    ) : [];
   }
 
   componentWillUnmount() {
-    this.eachSource(({name}) => this.removeSubscription(name));
+    this.subscriptions.forEach(subscription => subscription.remove());
+    this.subscriptions = null;
   }
 
-  getUpdatedModels() {
-    const updatedModels = {};
-
-    this.eachSource(({name, source}) => {
-      if (source instanceof Model) {
-        updatedModels[name] = source.objects.get({id: source.id});
-      } else if (! (source instanceof EventEmitter.Emittable)) {
-        throw new Watcher.BadSourceType(name);
-      }
-    });
-
-    return updatedModels;
+  subscribeTo(source) {
+    return source.emitter.changed(() => this.forceUpdate());
   }
 
-  injectProps(childProps = {}, updatedModels = {}) {
-    const props = {};
-
-    this.eachSource(({name}) => {
-      const updatedModel = updatedModels[name];
-      const childSource = childProps[name];
-
-      if (! (childSource instanceof Model)) return;
-      if (updatedModel.id !== childSource.id) return;
-
-      props[name] = updatedModel;
-    });
-
-    return props;
+  cloneChildren(el, {children = null}) {
+    return children && React.Children.count(children) > 0 && !isComponent(el) ? (
+      React.Children.map(children, child => this.cloneElement(child))
+    ) : children;
   }
 
-  removeSubscription(name) {
-    if (!this.subscriptions[name]) return;
+  cloneElement(el) {
+    const children = this.cloneChildren(el, el.props);
 
-    this.subscriptions[name].remove();
-    this.subscriptions[name] = null;
-  }
-
-  resetSubscription(name, source) {
-    this.removeSubscription(name);
-    this.subscriptions[name] = source.changed(() => this.forceUpdate());
-  }
-
-  eachSource(predicate) {
-    if (!this.props || !this.props.sources) return;
-
-    Object.keys(this.props.sources).forEach(
-      name => predicate({name, source: this.props.sources[name]})
-    );
-  }
-
-  cloneElement(el, updatedModels) {
-    let children = el.props.children;
-
-    if (React.Children.count(children) > 0 && !isComponent(el)) {
-      children = React.Children.map(children, child => this.cloneElement(child, updatedModels));
-    }
-
-    return React.cloneElement(el, this.injectProps(el.props, updatedModels), children);
+    return React.cloneElement(el, el.props, children);
   }
 
   render() {
     const childrenCount = React.Children.count(this.props.children);
-    const updatedModels = this.getUpdatedModels();
 
     if (childrenCount !== 1) throw new Watcher.BadChildrenCount(childrenCount);
 
-    return this.cloneElement(React.Children.only(this.props.children), updatedModels);
+    return this.cloneElement(React.Children.only(this.props.children));
   }
 
 }
 
 Watcher.propTypes = {
-  sources: React.PropTypes.object.isRequired,
+  sources: React.PropTypes.array.isRequired,
   children: React.PropTypes.element.isRequired,
 };
 

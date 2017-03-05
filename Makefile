@@ -10,7 +10,7 @@ lint:
 	@eslint src
 
 test:
-	@NODE_ENV=development mocha --compilers js:babel-register --require babel-polyfill
+	@NODE_ENV=development mocha --compilers js:babel-register --require babel-polyfill -b
 
 lib:
 	@mkdir lib
