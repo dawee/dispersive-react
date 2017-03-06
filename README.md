@@ -1,4 +1,4 @@
-# dispersive-react
+# react-dispersive
 
 Binding of [dispersive](http://github.com/dawee/dispersive) for [react](http://github.com/facebook/react) components.
 
@@ -7,7 +7,7 @@ Binding of [dispersive](http://github.com/dawee/dispersive) for [react](http://g
 This package has 2 peer dependencies : [dispersive](http://github.com/dawee/dispersive) and [react](http://github.com/facebook/react).
 
 ```sh
-npm install dispersive react dispersive-react
+npm install dispersive react react-dispersive
 ```
 
 ## Usage
@@ -40,7 +40,7 @@ const TodoItem = ({todo}) => {
 
 const TodoList = () => (
   <ul className="todo-list">
-    {Todo.objects.map(todo => <TodoItem todo={todo} key={todo.pk} />}
+    {Todo.objects.map(todo => <TodoItem todo={todo} key={todo.pk} />)}
   </ul>
 );
 
