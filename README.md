@@ -13,63 +13,61 @@ npm install dispersive react dispersive-react
 ## Usage
 
 ```jsx
-import {Store} from 'dispersive';
 import React, {Component} from 'react';
+import classNames from 'classnames';
+import {createModel} from 'dispersive/model';
+import {withField} from 'dispersive/field';
+import {createAction} from 'dispersive/action';
 import {Watcher} from 'dispersive-react';
 
-const schema = {
-  name: '',
-  price: 0,
+const Todo = createModel([
+  withField('text'),  
+  withField('checked'),
+]);
+
+const toggleTodo = createAction(todo => todo.update({checked: !todo.checked}));
+const addTodo = createAction(text => Todo.objects.create({text}));
+
+const TodoItem = ({todo}) => {
+  const className = classNames('todo', todo.checked ? 'checked' : null);
+
+  return (
+    <li className={className} onClick={() => toggleTodo(todo)}>
+      {todo.text}
+    </li>
+  );
 };
 
-const products = Store.createObjects({schema});
-
-const Product = ({product}) => (
-  <li className="product">
-    <div className="name">{product.name}</div>
-    <div className="price">{product.price}</div>
-  </li>
-);
-
-const ProductList = ({products}) => (
-  <ul>
-    {products.map(product => (
-      <Watcher sources={{product}}>
-        <Product product={product} />
-      </Watcher>
-    ))}
+const TodoList = () => (
+  <ul className="todo-list">
+    {Todo.objects.map(todo => <TodoItem todo={todo} key={todo.pk} />}
   </ul>
 );
 
-class App extends Component {
+class TodoForm extends Component {
+
+  submit = (event) => {
+    event.preventDefault();
+    addTodo({text: this.input.value});
+  }
 
   render() {
     return (
-      <Watcher sources={{products}}>
-        <ProductList products={products} />
-      </Watcher>
-    )
+      <form onSubmit={submit}>
+        <input ref={input => this.input = input} />
+      </form>      
+    );
   }
+}
 
-};
+class App = () => (
+  <Watcher sources={[Todo]}>
+    <div className="app">
+      <TodoList />
+      <TodoForm />
+    </div>
+  </Watcher>  
+);
 
 export default App;
 ```
-
-In this example, both the list and the product are observers.
-
-So, if you type this:
-
-```js
-products.create({name: 'ball', price: 12.5});
-```
-
-Then, the list will re-render.
-
-And if you type this :
-
-```js
-products.first().update({price: 15.25});
-```
-
-Then, only the concerned _Product_ element will re-render.
