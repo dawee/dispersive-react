@@ -1,6 +1,6 @@
 {
   "name": "react-dispersive",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React binding for Dispersive",
   "main": "lib",
   "scripts": {
@@ -18,7 +18,8 @@
   },
   "homepage": "https://github.com/dawee/dispersive-react#readme",
   "peerDependencies": {
-    "dispersive": "^1.0.0"
+    "dispersive": "2.x.x",
+    "react": "x.x.x"
   },
   "devDependencies": {
     "babel-cli": "6.10.1",
