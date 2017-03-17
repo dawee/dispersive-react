@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {createChangesFunnelEmitter} from 'dispersive/emitter';
 
 const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
   el.type.prototype instanceof Component
@@ -7,18 +8,14 @@ const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
 export class Watcher extends Component {
 
   componentDidMount() {
-    this.subscriptions = this.props.sources ? this.props.sources.map(
-      source => this.subscribeTo(source)
-    ) : [];
+    this.subscription = createChangesFunnelEmitter({models: this.props.models}).changed(
+      () => this.forceUpdate()
+    );
   }
 
   componentWillUnmount() {
-    this.subscriptions.forEach(subscription => subscription.remove());
-    this.subscriptions = null;
-  }
-
-  subscribeTo(source) {
-    return source.emitter.changed(() => this.forceUpdate());
+    this.subscription.remove();
+    this.subscription = null;
   }
 
   cloneChildren(el, {children = null}) {
@@ -44,7 +41,7 @@ export class Watcher extends Component {
 }
 
 Watcher.propTypes = {
-  sources: React.PropTypes.array.isRequired,
+  models: React.PropTypes.array.isRequired,
   children: React.PropTypes.element.isRequired,
 };
 
