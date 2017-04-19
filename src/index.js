@@ -7,9 +7,18 @@ const isComponent = el => !!el && !!el.type && !!el.type.prototype && (
 
 export class Watcher extends Component {
 
+  constructor(props) {
+    super(props);
+    this.state = this.getState();
+  }
+
+  getState() {
+    return this.props.state ? this.props.state() : {};
+  }
+
   componentDidMount() {
     this.subscription = createChangesFunnelEmitter({models: this.props.models}).changed(
-      () => this.forceUpdate()
+      () => this.setState(this.getState())
     );
   }
 
@@ -18,24 +27,12 @@ export class Watcher extends Component {
     this.subscription = null;
   }
 
-  cloneChildren(el, {children = null}) {
-    return children && React.Children.count(children) > 0 && !isComponent(el) ? (
-      React.Children.map(children, child => this.cloneElement(child))
-    ) : children;
-  }
-
-  cloneElement(el) {
-    const children = this.cloneChildren(el, el.props);
-
-    return React.cloneElement(el, el.props, children);
-  }
-
   render() {
     const childrenCount = React.Children.count(this.props.children);
 
     if (childrenCount !== 1) throw new Watcher.BadChildrenCount(childrenCount);
 
-    return this.cloneElement(React.Children.only(this.props.children));
+    return React.cloneElement(React.Children.only(this.props.children), this.state);
   }
 
 }
@@ -43,6 +40,7 @@ export class Watcher extends Component {
 Watcher.propTypes = {
   models: React.PropTypes.array.isRequired,
   children: React.PropTypes.element.isRequired,
+  state: React.PropTypes.func,
 };
 
 Watcher.BadChildrenCount = function WatcherBadChildrenCount(childrenCount) {

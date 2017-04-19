@@ -17,10 +17,10 @@ describe('Watcher', () => {
       withField('price', {initial: 0}),
     ]);
 
-    const ProductsCount = () => <div>{Product.objects.length}</div>;
+    const ProductsCount = ({ products }) => <div>{ products.count() }</div>;
 
     const Test = () => (
-      <Watcher models={[Product]}>
+      <Watcher models={[Product]} state={() => ({ products: Product.objects }) }>
         <ProductsCount />
       </Watcher>
     );
